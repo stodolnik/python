@@ -5,7 +5,6 @@ from sqlalchemy.orm import Mapped, mapped_column, registry
 
 table_registry = registry()
 
-
 @table_registry.mapped_as_dataclass
 class User:
     __tablename__ = 'users'
@@ -16,8 +15,8 @@ class User:
     password: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(
-        init=False, server_default=func.now(), nullable=False
+        init=False, server_default=func.now()
     )
-    update_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(  # Exercício
         init=False, server_default=func.now(), onupdate=func.now()
     )
