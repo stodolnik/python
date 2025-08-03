@@ -15,6 +15,9 @@ class User:
     username: Mapped[str] = mapped_column(nullable=False, unique=True)
     password: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False, unique=True)
-    create_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now(), nullable=False
+    )
+    update_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
     )
