@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from fast_zero.app import UserList, Userpublic, UserSchema
+from fast_zero.schemas import Userpublic, UserSchema
 
 
 def test_root_deve_retornar_ola_mundo(client):
@@ -10,33 +10,32 @@ def test_root_deve_retornar_ola_mundo(client):
 
 
 def test_create_user(client):
-    user_input = UserSchema(
-        username='Lucas', email='lucas@example.com', password='teste'
+    response = client.post(
+        '/users',
+        json={
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'secret',
+        },
     )
-    user_output = Userpublic(id=1, username='Lucas', email='lucas@example.com')
-
-    response = client.post('/users/', json=user_input.model_dump())
-
     assert response.status_code == HTTPStatus.CREATED
-    assert response.json() == user_output.model_dump()
+    assert response.json() == {
+        'username': 'alice',
+        'email': 'alice@example.com',
+        'id': 1,
+    }
 
 
 def test_read_users(client):
+    response = client.get('/users')
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {'users': []}
+
+
+def test_read_users_with_users(client, user):
+    user_schema = Userpublic.model_validate(user).model_dump()
     response = client.get('/users/')
-    user_output = UserList(
-        users=[Userpublic(id=1, username='Lucas', email='lucas@example.com')]
-    )
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == user_output.model_dump()
-
-
-def test_read_user(client):
-    user_output = Userpublic(id=1, username='Lucas', email='lucas@example.com')
-
-    response = client.get('/users/1')
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == user_output.model_dump()
+    assert response.json() == {'users': [user_schema]}
 
 
 def test_update_user(client):
