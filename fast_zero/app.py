@@ -5,9 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from fastapi.security import OAuth2PasswordRequestForm
 from fast_zero.database import get_session
 from fast_zero.models import User
-from fast_zero.schemas import Message, UserList, Userpublic, UserSchema
+from fast_zero.schemas import Message, Token, UserList, Userpublic, UserSchema
+from fast_zero.security import create_access_token,verify_password,get_password_hash
 
 app = FastAPI()
 
@@ -35,8 +37,11 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail='Username already exists',
             )
+
     db_user = User(
-        username=user.username, email=user.email, password=user.password
+        email=user.email,
+        username=user.username,
+        password=get_password_hash(user.password),
     )
     session.add(db_user)
     session.commit()
@@ -78,7 +83,7 @@ def update_user(
 
     try:
         db_user.username = user.username
-        db_user.password = user.password
+        db_user.password = get_password_hash(user.password)
         db_user.email = user.email
         session.commit()
         session.refresh(db_user)
@@ -104,3 +109,28 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     session.commit()
 
     return {'message': 'User deleted'}
+
+
+@app.token('/token',response_model=Token)
+def login_for_acess_token(
+    form_data : OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(get_session),
+):
+    user = session.scalar(User).where(User.email == form_data.username)
+    try:
+        if not user:
+            raise HTTPException(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                detail='Incorrect email or password'
+            )
+        if not verify_password(form_data,user.password):
+                raise HTTPException(
+                status_code=HTTPStatus.UNAUTHORIZED,
+                detail='Incorrect email or password'
+            )
+
+    except:
+            raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail='Incorrect email or password'
+            )
