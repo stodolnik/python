@@ -3,7 +3,8 @@ from zoneinfo import ZoneInfo
 
 from jwt import encode
 from pwdlib import PasswordHash
-from settings import Settings
+
+from fast_zero.settings import Settings
 
 SECRET_KEY = Settings().SECRET_KEY
 ALGORITHM = Settings().ALGORITHM
